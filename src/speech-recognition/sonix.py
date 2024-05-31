@@ -1,10 +1,11 @@
 import requests
 from base import BaseRecognizer
 
+
 class SonixRecognizer(BaseRecognizer):
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.headers = {'Authorization': f'Bearer {api_key}'}
+        self.headers = {"Authorization": f"Bearer {api_key}"}
 
     def transcribe(self, audio_path: str) -> str:
         """Uploads audio and retrieves transcript as SRT file after processing is complete.
@@ -30,12 +31,12 @@ class SonixRecognizer(BaseRecognizer):
         Returns:
             str: Media ID of the uploaded file.
         """
-        url = 'https://api.sonix.ai/v1/media'
-        files = {'file': open(file_path, 'rb')}
-        data = {'language': 'en', 'name': 'Audio Upload'}
+        url = "https://api.sonix.ai/v1/media"
+        files = {"file": open(file_path, "rb")}
+        data = {"language": "en", "name": "Audio Upload"}
         response = requests.post(url, headers=self.headers, files=files, data=data)
         response_data = response.json()
-        return response_data.get('id')
+        return response_data.get("id")
 
     def check_media_status(self, media_id: str) -> bool:
         """Checks the export status of the uploaded media.
@@ -46,10 +47,10 @@ class SonixRecognizer(BaseRecognizer):
         Returns:
             bool: True if the media is ready and completed, False otherwise.
         """
-        url = f'https://api.sonix.ai/v1/media_exports/{media_id}'
+        url = f"https://api.sonix.ai/v1/media_exports/{media_id}"
         response = requests.get(url, headers=self.headers)
         response_data = response.json()
-        return response_data.get('status') == 'completed'
+        return response_data.get("status") == "completed"
 
     def download_transcript(self, media_id: str) -> str:
         """Downloads the transcript file.
@@ -60,9 +61,9 @@ class SonixRecognizer(BaseRecognizer):
         Returns:
             str: Path to the downloaded SRT file.
         """
-        url = f'https://api.sonix.ai/v1/media/{media_id}/transcript.srt'
+        url = f"https://api.sonix.ai/v1/media/{media_id}/transcript.srt"
         response = requests.get(url, headers=self.headers)
-        file_path = f'{media_id}.srt'
-        with open(file_path, 'w') as file:
+        file_path = f"{media_id}.srt"
+        with open(file_path, "w") as file:
             file.write(response.text)
         return file_path
