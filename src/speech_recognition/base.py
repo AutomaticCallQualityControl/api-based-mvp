@@ -13,3 +13,15 @@ class BaseRecognizer(ABC):
             str: Transcribed text.
         """
         pass
+
+    @abstractmethod
+    def transcribe_dump(self, audio_path: str, dump_path: str) -> str:
+        """Transcribes audio to text.
+
+        Args:
+            audio_path (str): Path to the audio file.
+
+        Returns:
+            str: Path to json with results.
+        """
+        pass
