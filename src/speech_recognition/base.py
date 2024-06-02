@@ -22,6 +22,6 @@ class BaseRecognizer(ABC):
             audio_path (str): Path to the audio file.
 
         Returns:
-            str: Path to json with results.
+            str: Path to file with results.
         """
         pass
