@@ -3,9 +3,11 @@ import re
 from typing import List
 
 import pandas as pd
+from loguru import logger
 from openai import OpenAI
 
 from text_analysis.base import BaseTextAnalyzer
+from text_analysis.consts import SYSTEM_MESSAGE_FOR_AUDIO_ANALYSIS
 
 
 class TextAnalyzer(BaseTextAnalyzer):
@@ -29,71 +31,50 @@ class TextAnalyzer(BaseTextAnalyzer):
 
         return formatted_transcript, id_to_text
 
+    def parse_model_output_to_json(self, content):
+        corrected_content = content.replace("'", '"')
+        corrected_content = re.sub(r"\}\s*\{", "}, {", corrected_content)
+        corrected_content = f"[{corrected_content}]"
+
+        try:
+            json_output = json.loads(corrected_content)
+            return json_output
+        except json.JSONDecodeError as e:
+            logger.error("Failed to decode JSON:", e)
+            return None
+
     def generate_report(
-        self, transcribed_text: str, id_to_text: dict, csv_path: str, csv_out: str
+        self, transcribed_text: str, id_to_text: dict, csv_path: str, json_out: str
     ) -> None:
-        """Generates answers for questions based on the provided transcript and saves the answers with the ID of the
-        transcript segments back into the CSV file.
-        """
         questions_df = pd.read_csv(csv_path)
         questions = questions_df.columns.tolist()
 
-        # Prepare conversation with context introduction
-        messages = [
-            {
-                "role": "system",
-                "content": "This is a transcript of a conversation. Answer the following questions based on the transcript provided.",
-            },
-            {"role": "user", "content": transcribed_text},
-        ]
+        messages = [{"role": "system", "content": SYSTEM_MESSAGE_FOR_AUDIO_ANALYSIS}]
+        messages.append({"role": "user", "content": transcribed_text})
 
-        # Include each question as a separate user message
         for question in questions:
-            messages.append(
-                {
-                    "role": "user",
-                    "content": f"Question: {question} (Include the ID of the relevant transcript segment in your answer.)",
-                }
-            )
+            question_prompt = f"Question: {question}"
+            messages.append({"role": "user", "content": question_prompt})
 
-        # Call the model and collect all answers in a single interaction
+        print(messages)
         response = self.client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.0,
-            max_tokens=150 * len(questions),  # Adjust max tokens based on number of questions
+            max_tokens=150 * len(questions),
         )
+        result_content = response.choices[0].message.content
 
-        print(response)
+        print("Raw response:", result_content)
 
-        answers = self.parse_answers(response.choices[0].message.content, questions)
-
-        # Save answers and IDs to CSV
-        answers_df = pd.DataFrame(
-            {
-                "Question": questions,
-                "Answer": [ans["text"] for ans in answers],
-                "Segment IDs": [ans["id"] for ans in answers],
-            }
-        )
-        answers_df.to_csv(csv_out, index=False)
-
-    def parse_answers(self, answer_content, questions):
-        # Use regex to match patterned responses
-        pattern = r"\d+\.\s.*?(?=\n\d+\.|$)"
-        matches = re.findall(pattern, answer_content)
-        answers = [{"text": m, "id": "".join(filter(str.isdigit, m))} for m in matches]
-
-        # Ensure the answers align with the number of questions
-        while len(answers) < len(questions):
-            answers.append({"text": "No answer provided", "id": "N/A"})
-
-        return answers[: len(questions)]  # Ensure no excess answers
+        structured_responses = self.parse_model_output_to_json(result_content)
+        with open(json_out, "w", encoding="utf-8") as f:
+            json.dump(structured_responses, f, indent=4, ensure_ascii=False)
 
 
 openai_key = "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"
 csv_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test.csv"
-csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output.csv"
+csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output.json"
 json_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_dump.json"
 
 analyzer = TextAnalyzer(openai_key)
