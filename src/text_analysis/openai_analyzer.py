@@ -6,8 +6,8 @@ import pandas as pd
 from loguru import logger
 from openai import OpenAI
 
-from text_analysis.base import BaseTextAnalyzer
-from text_analysis.consts import SYSTEM_MESSAGE_FOR_AUDIO_ANALYSIS
+from src.text_analysis.base import BaseTextAnalyzer
+from src.text_analysis.consts import SYSTEM_MESSAGE_FOR_AUDIO_ANALYSIS
 
 
 class TextAnalyzer(BaseTextAnalyzer):
@@ -58,7 +58,7 @@ class TextAnalyzer(BaseTextAnalyzer):
 
         logger.info("Processing input querry to OpenAI...")
         response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=messages,
             temperature=0.0,
             max_tokens=150 * len(questions),
