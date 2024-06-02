@@ -19,23 +19,20 @@ class TextAnalyzer(BaseTextAnalyzer):
             transcribed_text (str): The text to analyze.
             csv_path (str): Path to the CSV file where questions are headers and answers will be filled.
         """
-        # Read questions from CSV file headers
         questions_df = pd.read_csv(csv_path)
         questions = questions_df.columns.tolist()
 
-        # Generate answers using OpenAI
         answers = []
         for question in questions:
             prompt = f"{transcribed_text}\n\nQuestion: {question}\nAnswer:"
             response = openai.Completion.create(
-                model="text-davinci-003",  # Use the most appropriate and latest model available
+                model="text-davinci-003",
                 prompt=prompt,
                 temperature=0.5,
                 max_tokens=150,
             )
             answers.append(response.choices[0].text.strip())
 
-        # Fill CSV with the answers and save it
         answers_df = pd.DataFrame([answers], columns=questions)
         answers_df.to_csv(csv_path, index=False)
 
