@@ -44,7 +44,7 @@ class TextAnalyzer(BaseTextAnalyzer):
             return None
 
     def generate_report(
-        self, transcribed_text: str, id_to_text: dict, csv_path: str, json_out: str
+        self, transcribed_text: str, id_to_text: dict, csv_path: str, output_path: str
     ) -> None:
         questions_df = pd.read_csv(csv_path)
         questions = questions_df.columns.tolist()
@@ -56,7 +56,7 @@ class TextAnalyzer(BaseTextAnalyzer):
             question_prompt = f"Question: {question}"
             messages.append({"role": "user", "content": question_prompt})
 
-        print(messages)
+        logger.info("Processing input querry to OpenAI...")
         response = self.client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
@@ -64,17 +64,27 @@ class TextAnalyzer(BaseTextAnalyzer):
             max_tokens=150 * len(questions),
         )
         result_content = response.choices[0].message.content
-
-        print("Raw response:", result_content)
+        logger.info("Received response from OpenAI")
 
         structured_responses = self.parse_model_output_to_json(result_content)
+
+        json_out = f"{output_path}.json"
+        csv_out = f"{output_path}.csv"
+        logger.info("Store response from OpenAI to file")
+
         with open(json_out, "w", encoding="utf-8") as f:
             json.dump(structured_responses, f, indent=4, ensure_ascii=False)
+
+        if structured_responses:
+            df = pd.DataFrame(structured_responses)
+            df.to_csv(csv_out, index=False)
+        else:
+            logger.error("Failed to convert responses to CSV: Invalid JSON data")
 
 
 openai_key = "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"
 csv_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test.csv"
-csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output.json"
+csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output"
 json_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_dump.json"
 
 analyzer = TextAnalyzer(openai_key)
