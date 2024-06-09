@@ -39,5 +39,3 @@ exclude = '''
     | dist
 )/
 '''
-
-# Other tool configurations can also be added here as needed

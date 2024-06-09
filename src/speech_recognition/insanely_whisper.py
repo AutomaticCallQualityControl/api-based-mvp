@@ -1,8 +1,13 @@
-from faster_whisper import WhisperModel
-from .base import BaseRecognizer
-import json, datetime, os
+import datetime
+import json
+import os
 from typing import TypedDict
+
+from faster_whisper import WhisperModel
 from tqdm import tqdm
+
+from src.speech_recognition.base import BaseRecognizer
+
 
 class JsonTranscriptionResult(TypedDict):
     speakers: list
@@ -17,18 +22,23 @@ def build_result(outputs) -> JsonTranscriptionResult:
         "text": outputs["text"],
     }
 
+
 class InsanelyWhisper(BaseRecognizer):
     def __init__(self, config):
         self.beam_size = config.beam_size
         self.lang = config.lang
         self.dump_folder = config.dump_res_asr_folder
-        self.model = WhisperModel(config.model_size, device=config.device, compute_type=config.compute_type)
+        self.model = WhisperModel(
+            config.model_size, device=config.device, compute_type=config.compute_type
+        )
 
     def dump_results(self, result, dump_path: str):
         with open(dump_path, "w", encoding="utf8") as fp:
             json_result = build_result(result)
             json.dump(json_result, fp, ensure_ascii=False)
-        print(f"Your file has been transcribed & speaker segmented go check it out over here: {dump_path}")
+        print(
+            f"Your file has been transcribed & speaker segmented go check it out over here: {dump_path}"
+        )
 
     def transcribe(self, audio_path: str):
         pass
@@ -36,18 +46,18 @@ class InsanelyWhisper(BaseRecognizer):
     def transcribe_dump(self, audio_path: str, dump_path: str = None) -> str:
         if dump_path is None:
             date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-            audio_name = os.path.basename(audio_path).split('.')[0]
-            file_name = f'{date}_{audio_name}.json'
+            audio_name = os.path.basename(audio_path).split(".")[0]
+            file_name = f"{date}_{audio_name}.json"
             dump_path = os.path.join(self.dump_folder, file_name)
-        segments, _ = self.model.transcribe(audio_path, beam_size=self.beam_size, language=self.lang)
-        print(f'Audio transcribed')
+        segments, _ = self.model.transcribe(
+            audio_path, beam_size=self.beam_size, language=self.lang
+        )
+        print(f"Audio transcribed")
         dump_results = []
-        print(f'Diarization:')
+        print(f"Diarization:")
         for segment in tqdm(segments):
-            dump_results.append({
-                'start': segment.start, 'end': segment.end, 'text': segment.text
-            })
-        with open(dump_path, 'w', encoding="utf8") as f:
+            dump_results.append({"start": segment.start, "end": segment.end, "text": segment.text})
+        with open(dump_path, "w", encoding="utf8") as f:
             json.dump(dump_results, f, indent=1, ensure_ascii=False)
-        print(f'Audio transcribed and diarized, json dump path: {dump_path}')
+        print(f"Audio transcribed and diarized, json dump path: {dump_path}")
         # return self.dump_results(segments, dump_path)

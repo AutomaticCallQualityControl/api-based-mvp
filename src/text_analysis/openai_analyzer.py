@@ -11,8 +11,9 @@ from src.text_analysis.consts import SYSTEM_MESSAGE_FOR_AUDIO_ANALYSIS
 
 
 class TextAnalyzer(BaseTextAnalyzer):
-    def __init__(self, openai_key: str):
+    def __init__(self, openai_key: str, model_type: str):
         self.client = OpenAI(api_key=openai_key)
+        self.model_type = model_type
 
     def load_and_format_transcription(self, json_path: str) -> (str, dict):
         """Loads transcription data from a JSON file and formats it into a single transcript,
@@ -22,14 +23,12 @@ class TextAnalyzer(BaseTextAnalyzer):
             transcript_data = json.load(file)
 
         formatted_transcript = ""
-        id_to_text = {}
         for i, segment in enumerate(transcript_data):
             speaker_id = 1 if i % 2 == 0 else 2  # Simplified speaker ID assignment
             speaker_label = f"Speaker {speaker_id}"
             formatted_transcript += f"{speaker_label} (ID {i}): {segment['text'].strip()} "
-            id_to_text[i] = segment["text"].strip()
 
-        return formatted_transcript, id_to_text
+        return formatted_transcript
 
     def parse_model_output_to_json(self, content):
         corrected_content = content.replace("'", '"')
@@ -43,9 +42,7 @@ class TextAnalyzer(BaseTextAnalyzer):
             logger.error("Failed to decode JSON:", e)
             return None
 
-    def generate_report(
-        self, transcribed_text: str, id_to_text: dict, csv_path: str, output_path: str
-    ) -> None:
+    def generate_report(self, transcribed_text: str, csv_path: str, output_path: str) -> None:
         questions_df = pd.read_csv(csv_path)
         questions = questions_df.columns.tolist()
 
@@ -58,12 +55,13 @@ class TextAnalyzer(BaseTextAnalyzer):
 
         logger.info("Processing input querry to OpenAI...")
         response = self.client.chat.completions.create(
-            model="gpt-4-turbo",
+            model=self.model_type,
             messages=messages,
             temperature=0.0,
             max_tokens=150 * len(questions),
         )
         result_content = response.choices[0].message.content
+        print(result_content)
         logger.info("Received response from OpenAI")
 
         structured_responses = self.parse_model_output_to_json(result_content)
@@ -82,11 +80,11 @@ class TextAnalyzer(BaseTextAnalyzer):
             logger.error("Failed to convert responses to CSV: Invalid JSON data")
 
 
-openai_key = "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"
-csv_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test.csv"
-csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output"
-json_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_dump.json"
+# openai_key = "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"
+# csv_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test.csv"
+# csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output"
+# json_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_dump.json"
 
-analyzer = TextAnalyzer(openai_key)
-formatted_transcript, id_to_text = analyzer.load_and_format_transcription(json_path)
-analyzer.generate_report(formatted_transcript, id_to_text, csv_path, csv_path_out)
+# analyzer = TextAnalyzer(openai_key)
+# formatted_transcript, id_to_text = analyzer.load_and_format_transcription(json_path)
+# analyzer.generate_report(formatted_transcript, id_to_text, csv_path, csv_path_out)
