@@ -4,7 +4,6 @@ import streamlit as st
 from loguru import logger
 
 from app.utils import nav_page
-from src.config import CONFIG
 from src.speech_recognition.insanely_whisper import InsanelyWhisper
 from src.text_analysis.openai_analyzer import TextAnalyzer
 

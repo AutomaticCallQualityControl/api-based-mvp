@@ -78,13 +78,3 @@ class TextAnalyzer(BaseTextAnalyzer):
             df.to_csv(csv_out, index=False)
         else:
             logger.error("Failed to convert responses to CSV: Invalid JSON data")
-
-
-# openai_key = "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"
-# csv_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test.csv"
-# csv_path_out = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_output"
-# json_path = "/Users/a.slavutin/PetProjects/api-based-mvp/data/test_dump.json"
-
-# analyzer = TextAnalyzer(openai_key)
-# formatted_transcript, id_to_text = analyzer.load_and_format_transcription(json_path)
-# analyzer.generate_report(formatted_transcript, id_to_text, csv_path, csv_path_out)
