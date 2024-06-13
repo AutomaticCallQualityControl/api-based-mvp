@@ -5,19 +5,22 @@ from pydantic_settings import BaseSettings
 
 class Config(BaseSettings):
     # FastWhisper settings
-    fastwhisper_device: str = "cpu"
-    fastwhisper_model_size: str = "large-v2"
-    fastwhisper_beam_size: int = 1
-    fastwhisper_lang: str = "ru"
-    fastwhisper_compute_type: str = "int16"
-    fastwhisper_dump_res_asr_folder: Optional[str] = "/path/to/dump/folder/"
+    whisper_model_size: str = "large-v2"
+    whisper_beam_size: int = 1
+    whisper_lang: str = "ru"
+    whisper_compute_type: str = "int16"
+    whisper_dump_res_asr_folder: Optional[str] = "/path/to/dump/folder/"
+    dump_transcription: bool = True
 
     # TextAnalyzer settings
-    textanalyzer_model_type: str = "gpt-3.5-turbo"
-    textanalyzer_openai_key: str
+    text_model_type: str = "gpt-3.5-turbo"
+    openai_key: str
+    dump_text_analyse_results: bool = True
 
     # Application settings
     app_debug: bool = True
+    output_path: str = "data/"
+    device: str = "cpu"
 
     class Config:
         env_file = ".env"
