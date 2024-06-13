@@ -25,13 +25,13 @@ if "audio_file" in st.session_state:
     for result in results[0]:
         if "call_summary" in result:
             st.markdown(
-                f"<p style='font-size: 16px; line-height: 1.5;'>Общее Резюме Звонка:<br/>{result['call_summary']}</p>",
+                f"<p style='font-size: 22px; line-height: 2;'>Общее Резюме Звонка:<br/>{result['call_summary']}</p>",
                 unsafe_allow_html=True,
             )
             st.write("")  # Add space after call summary
 
     if result_csv_path:
-        st.subheader("Результаты в формате CSV:")
+        st.header("Результаты в формате CSV:")
         try:
             df = pd.read_csv(result_csv_path)
             st.write(df)
@@ -49,7 +49,7 @@ if "audio_file" in st.session_state:
 
     st.write("")  # Add space after call summary
 
-    st.subheader("Подробный разбор каждого вопроса с релевантным отрывком:")
+    st.header("Подробный разбор каждого вопроса с релевантным отрывком:")
 
     # TODO: Handle nested results properly
     # Check out if it nested because of postprocessing either model output
@@ -60,7 +60,7 @@ if "audio_file" in st.session_state:
         question = result["question"]
         answer = result["answer"]
         segment_ids = result["segment_id"]
-        st.write(f"Вопрос: {question}")
+        st.subheader(f"Вопрос: {question}")
         st.write(f"Ответ: {answer}")
         for segment_idx, segment_id in enumerate(segment_ids):
             if isinstance(segment_id, str) and segment_id.startswith("ID "):
