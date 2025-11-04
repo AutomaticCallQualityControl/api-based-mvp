@@ -101,6 +101,17 @@ Automate the quality control process for call center operators by:
 - ✅ Two clarifying questions were asked
 - ❌ Operator did not ask how to address the patient
 
+## User Interface
+
+The project includes a simple Streamlit-based UI application for easy analysis review. The interface allows you to:
+- View detailed breakdown of each evaluation question
+- Listen to relevant audio segments for each answer
+- Review answers with corresponding transcript excerpts
+
+![UI Example](data/ui.png)
+
+The UI displays each question with its answer and provides audio playback of the relevant conversation segments, making it easy to verify the AI's analysis and conduct quality reviews.
+
 ## Setup
 
 1. install reqs
